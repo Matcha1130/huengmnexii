@@ -2,7 +2,7 @@ from datetime import datetime
 import json
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import ValidationError
@@ -43,11 +43,13 @@ app.add_middleware(
 
 
 @app.get("/", response_class=HTMLResponse)
-async def get_client():
+async def get_client(request: Request):
     """Return client HTML"""
     data = ''
     with open('client.html', 'rt', encoding='utf-8') as f:
         data = f.read()
+    server_ip, port = request.scope.get("server")
+    data = data.replace("127.0.0.1:8000", f"{server_ip}:{port}")
     return data
 
 

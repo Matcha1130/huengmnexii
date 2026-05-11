@@ -14,6 +14,9 @@ class MessageBase(BaseModel):
     image_filename: str | None = Field(None,
                                        description="File name of image data")
 
+class Messages(BaseModel):
+    messages: list[Message] = Field(default_factory=list)
+
 
 class Message(MessageBase):
     time: datetime | None = Field(None, description="Message post time")

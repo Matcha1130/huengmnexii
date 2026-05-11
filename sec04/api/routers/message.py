@@ -65,7 +65,7 @@ async def get_message_important(request: Request, message_id: int):
         raise HTTPException(status_code=404,
                             detail="Message cannot be found")
     # get_message_important
-    important = True
+    important = request.app.state.messages.messages[message_id].important
     return {"important": important}
 
 
@@ -76,6 +76,7 @@ async def put_message_important(request: Request, message_id: int):
         raise HTTPException(status_code=404,
                             detail="Message cannot be found")
     # put_message_important
+    request.app.state.messages.messages[message_id].important = True
     return {"success": True}
 
 
@@ -86,4 +87,5 @@ async def delete_message_important(request: Request, message_id: int):
         raise HTTPException(status_code=404,
                             detail="Message cannot be found")
     # delete_message_important
+    request.app.state.messages.messages[message_id].important = False
     return {"success": True}
