@@ -154,15 +154,36 @@ function display_item(val) {
 
 // message を li として ul に追加
 function display_add_message(val) {
-    $('#messages ul').append(`<li class="message" id="${val['id']}">${display_item(val)}</li>`)
+    
+    let cls = "message"
+
+    if (val['important']) {
+        cls += " important"
+    }
+
+    $('#messages ul').append(
+        `<li class="${cls}" id="${val['id']}">
+            ${display_item(val)}
+        </li>`
+    )
+
     register_callback(val['id'])
 }
 
 // message を置き換え(li の中身を val で書き換える)
 function display_replace_message(val) {
-    let s = dateoption.format(Date.parse(val['time']))
-    $('#messages ul li.message#' + val['id']).empty()
-    $('#messages ul li.message#' + val['id']).append(display_item(val))
+    
+    let target = $('#messages ul li.message#' + val['id'])
+
+    if (val['important']) {
+        target.addClass('important')
+    } else {
+        target.removeClass('important')
+    }
+
+    target.empty()
+    target.append(display_item(val))
+
     register_callback(val['id'])
 }
 
@@ -221,6 +242,13 @@ li.message {
     border: 1px solid #caa;
     padding: 5px;
 }
+
+/* important=true の時 */
+li.message.important {
+    background: #ffeb99;
+    border: 1px solid #cc9900;
+}
+
 /* Button の表示スタイル */
 button {
     border: 1px solid #a88;
