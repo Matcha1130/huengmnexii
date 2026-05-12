@@ -1,18 +1,15 @@
 from datetime import datetime
 from fastapi import APIRouter
 from fastapi import HTTPException
-from fastapi import Request, Depends
+from fastapi import Depends
 
+from api.db import get_system
 from api.schemas.system import System, Response
 from api.schemas.user import User
-import api.schemas.message as message_schema
+from api.schemas.message import Message, MessagePost
 from .user import get_current_active_user
 
 router = APIRouter()
-
-
-def get_system(request: Request):
-    return request.app.state.system
 
 
 @router.get("/messages", response_model=Response)
@@ -57,22 +54,26 @@ async def get_messages_current_id(system: System = Depends(get_system),
     return {"current_id": system.current_id}
 
 
-@router.post("/messages", response_model=message_schema.Message)
-async def post_message(message: message_schema.MessagePost,
+@router.post("/messages", response_model=Message)
+async def post_message(message: MessagePost,
                        system: System = Depends(get_system),
                        current_user: User = Depends(get_current_active_user)):
     """message のPOST"""
     next_id = system.current_id + 1
-    time = datetime.now()
-    m = message_schema.Message(time=time, update_time=time, id=next_id,
-                               name=current_user.username,
-                               **message.model_dump())
+    now = datetime.now()
+    m = Message(
+        id=next_id,
+        name=current_user.username,
+        time=now,
+        update_time=now,
+        **message.model_dump(),
+    )
     system.messages[next_id] = m
     system.current_id = next_id
     return m
 
 
-@router.get("/messages/{message_id}", response_model=message_schema.Message)
+@router.get("/messages/{message_id}", response_model=Message)
 async def get_message(message_id: int,
                       system: System = Depends(get_system),
                       current_user: User = Depends(get_current_active_user)):
@@ -85,8 +86,8 @@ async def get_message(message_id: int,
     return system.messages[message_id]
 
 
-@router.put("/messages/{message_id}", response_model=message_schema.Message)
-async def put_message(message_id: int, message: message_schema.MessagePost,
+@router.put("/messages/{message_id}", response_model=Message)
+async def put_message(message_id: int, message: MessagePost,
                       system: System = Depends(get_system),
                       current_user: User = Depends(get_current_active_user)):
     """message のPUT"""
@@ -94,12 +95,10 @@ async def put_message(message_id: int, message: message_schema.MessagePost,
         raise HTTPException(status_code=404,
                             detail="Message cannot be found")
 
-    orig = system.messages[message_id]
-    m = message_schema.Message(time=orig.time,
-                               update_time=datetime.now(),
-                               id=message_id,
-                               name=orig.name,
-                               **message.model_dump())
+    m = system.messages[message_id]
+    m.message = message.message
+    m.important = message.important
+    m.update_time = datetime.now()
     system.messages[message_id] = m
     return m
 
@@ -138,8 +137,9 @@ async def put_message_important(message_id: int,
         raise HTTPException(status_code=404,
                             detail="Message cannot be found")
 
-    system.messages[message_id].update_time = datetime.now()
-    system.messages[message_id].important = True
+    m = system.messages[message_id]
+    m.update_time = datetime.now()
+    m.important = True
     return {"success": True}
 
 
@@ -152,6 +152,7 @@ async def delete_message_important(message_id: int,
         raise HTTPException(status_code=404,
                             detail="Message cannot be found")
 
-    system.messages[message_id].update_time = datetime.now()
-    system.messages[message_id].important = False
+    m = system.messages[message_id]
+    m.update_time = datetime.now()
+    m.important = False
     return {"success": True}

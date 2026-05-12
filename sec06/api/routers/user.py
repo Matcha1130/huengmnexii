@@ -3,7 +3,7 @@
 
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Request, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 import jwt
@@ -14,6 +14,7 @@ from pwdlib import PasswordHash
 from api.schemas.system import System
 from api.schemas.user import User, UserInDB, UserCreate
 from api.schemas.token import Token, TokenData
+from api.db import get_system
 
 SECRET_KEY = "410f0f0770a1a93c9d3010b6276490d757f0351ec6365fa4f4660a5006b7d269"
 ALGORITHM = "HS256"
@@ -37,8 +38,8 @@ def get_password_hash(password):
 
 def get_user(db, username: str):
     if username in db:
-        user_dict = db[username]
-        return user_dict
+        return db[username]
+    return None
 
 
 def authenticate_user(fake_db, username: str, password: str):
@@ -60,10 +61,6 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
-
-
-def get_system(request: Request):
-    return request.app.state.system
 
 
 async def get_current_user(
