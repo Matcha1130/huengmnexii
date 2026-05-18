@@ -29,6 +29,9 @@ def print_message(message):
           f"{message.id} "
           f"{message.name}: {message.message}{star}")
 
+def check_nulpo(message):
+    if message.message == "ぬるぽ":
+        post_message("bot", "ガッ")
 
 def check(server_current_id):
     url = BASE_URL
@@ -40,7 +43,7 @@ def check(server_current_id):
         for i in range(server_current_id + 1, res_dict['current_id'] + 1):
             message = get_message(i)
             print_message(message)
-
+            check_nulpo(message)
     return res_dict['current_id']
 
 
