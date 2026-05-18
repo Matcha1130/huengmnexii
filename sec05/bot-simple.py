@@ -2,6 +2,7 @@
 
 import json
 import time
+import random
 
 import requests
 import api.schemas.message
@@ -33,6 +34,10 @@ def check_nulpo(message):
     if message.message == "ぬるぽ":
         post_message("bot", "ガッ")
 
+def dice(message):
+    if message.message == "dice":
+        post_message("dice", str(random.randint(1, 6)))
+
 def check(server_current_id):
     url = BASE_URL
     url = f"{url}/messages/current_id"
@@ -44,6 +49,7 @@ def check(server_current_id):
             message = get_message(i)
             print_message(message)
             check_nulpo(message)
+            dice(message)
     return res_dict['current_id']
 
 
